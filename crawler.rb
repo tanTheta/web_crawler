@@ -2,8 +2,7 @@ require 'nokogiri'
 require 'rest-client'
 require 'set'
 
-class DomainCrawler
-  include GlobalLogger
+class Crawler
   attr_accessor :root_url, :exclusion_list, :invalid_urls
   attr_reader :traversed_urls, :traversable_urls
 
@@ -34,7 +33,7 @@ class DomainCrawler
           examine_url(href) unless href.to_s.empty?
         end
       rescue StandardError => e
-        g_debug(e.to_s)
+        puts (e.to_s) # You can replace puts with a logger.
       end
       traversable_urls.delete(traversable_urls.first)
     end
@@ -71,7 +70,7 @@ class DomainCrawler
     doc.xpath(selector).map { |anchor| anchor['href'] }
   rescue StandardError => e
     invalid_urls << url
-    g_debug("#{url} might be an invalid URL. #{e}")
+    puts ("#{url} might be an invalid URL. #{e}") # You can replace puts with a logger.
   end
 
   # Filters href from a JS page.
@@ -81,9 +80,11 @@ class DomainCrawler
     browser.find_elements(:tag_name, selector).map {|link| link.href}
   rescue StandardError => e
     invalid_urls << url
-    g_debug("#{url} might be an invalid URL. #{e}")
+    puts ("#{url} might be an invalid URL. #{e}")# You can replace puts with a logger.
   end
 
+  # Returns hrefs based on is_js param.
+  # If is_js, use selenium webdriver. Else, use Nokogiri.
   def get_hrefs(url)
     if @is_js
       raise 'Please pass a browser object' if @browser.nil?
